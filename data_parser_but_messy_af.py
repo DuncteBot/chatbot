@@ -32,8 +32,7 @@ from helpers import create_table_if_not_exists, get_db_path, get_dataset_path, g
 
 timeframes = []
 sql_transaction = []
-# start_row = 0
-start_row = 8200000  # that is where I stopped it last time
+start_row = 0
 cleanup = 1000000
 
 for f in os.listdir(data_path):
@@ -170,6 +169,34 @@ for timeframe in timeframes:
                                     sql_insert_no_parent(comment_id, parent_id, body, subreddit, created_utc, score)
                     except Exception as e:
                         print(e)
+
+                # row = json.loads(row)
+                # parent_id = row['parent_id'].split('_')[1]
+                # body = format_data(row['body'])
+                # created_utc = row['created_utc']
+                # score = row['score']
+                # # comment_id = row['name'] if 'name' in row else row['id']
+                # comment_id = row['id']
+                # subreddit = row['subreddit']
+                # parent_data = find_parent(parent_id)
+                #
+                # existing_comment_score = find_existing_score(parent_id)
+                #
+                # if existing_comment_score:
+                #     if score > existing_comment_score:
+                #         if acceptable(body):
+                #             sql_insert_replace_comment(comment_id, parent_id, parent_data, body, subreddit, created_utc,
+                #                                        score)
+                #
+                # else:
+                #     if acceptable(body):
+                #         if parent_data:
+                #             if score >= 2:
+                #                 sql_insert_has_parent(comment_id, parent_id, parent_data, body, subreddit, created_utc,
+                #                                       score)
+                #                 paired_rows += 1
+                #         else:
+                #             sql_insert_no_parent(comment_id, parent_id, body, subreddit, created_utc, score)
 
                 if row_counter % 100000 == 0:
                     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,

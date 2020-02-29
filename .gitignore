@@ -3,3 +3,4 @@ venv/
 !\.idea/copyright/chatbot.xml
 !\.idea/copyright/profiles_settings.xml
 _data/
+_dbs/*.db
