@@ -57,11 +57,13 @@ def format_data(data):
 
 
 def acceptable(data):
-    if len(data.split(' ')) > 50 or len(data) < 1:
+    if len(data.split(' ')) > 1000 or len(data) < 1:
         return False
     elif len(data) > 32000:
         return False
-    elif data == '[deleted]' or data == '[removed]':
+    elif data == '[deleted]':
+        return False
+    elif data == '[removed]':
         return False
     else:
         return True

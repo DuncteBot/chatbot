@@ -33,7 +33,7 @@ from helpers import create_table_if_not_exists, get_db_path, get_dataset_path, g
 timeframes = []
 sql_transaction = []
 # start_row = 0
-start_row = 8200000  # that is where I stopped it last time
+start_row = 14900000  # that is where I stopped it last time
 cleanup = 1000000
 
 for f in os.listdir(data_path):
@@ -53,6 +53,9 @@ def find_parent(pid):
         c.execute(sql)
         result = c.fetchone()
         if result is not None:
+            res = result[0]
+            if res == 'False':
+                return False
             return result[0]
         else:
             return False
@@ -78,13 +81,13 @@ def find_existing_score(pid):
 def transaction_bldr(sql):
     global sql_transaction
     sql_transaction.append(sql)
-    if len(sql_transaction) > 10000:
+    if len(sql_transaction) > 2000:
         c.execute('BEGIN TRANSACTION')
         for s in sql_transaction:
             try:
                 c.execute(s)
             # except Exception as e:
-            #     print('transaction_bldr', e)
+            #     print(str(datetime.now()), 'transaction_bldr', s, e)
             except:
                 pass
         connection.commit()
@@ -178,7 +181,12 @@ for timeframe in timeframes:
                 if row_counter > start_row:
                     if row_counter % cleanup == 0:
                         print("Cleanin up!")
+                        # Firsly remove the null values
                         sql = "DELETE FROM parent_reply WHERE parent IS NULL"
+                        c.execute(sql)
+                        connection.commit()
+                        # After that we delete the values that are 'False' (idk how those got there)
+                        sql = "DELETE FROM parent_reply WHERE parent == 'False'"
                         c.execute(sql)
                         connection.commit()
                         c.execute("VACUUM")
