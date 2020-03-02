@@ -2,5 +2,8 @@ venv/
 .idea/
 !\.idea/copyright/chatbot.xml
 !\.idea/copyright/profiles_settings.xml
-_data/
+!_data/.gitignore
+_data/*
 _dbs/*.db
+_dbs/*.db-journal
+__pycache__

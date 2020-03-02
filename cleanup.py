@@ -21,9 +21,36 @@
 #  SOFTWARE.
 #
 
-import re
+import os
+import sqlite3
 
-data_path = '_data'
-# database_path = '_dbs'
-database_path = 'c:/ai_tmp/_dbs'
-filename_regex = re.compile('^RC_((?:[0-9]{4})-(?:[0-9]{2}))$')
+from config import filename_regex, data_path
+from helpers import get_db_path, get_dataset_path
+
+timeframes = []
+
+for f in os.listdir(data_path):
+    if os.path.isfile(get_dataset_path(f)):
+        print(f)
+        match = filename_regex.match(f)
+        if match is not None:
+            timeframe = match.group(1)
+            timeframes.append(timeframe)
+
+print(timeframes)
+
+for timeframe in timeframes:
+    with sqlite3.connect(get_db_path(timeframe)) as connection:
+        c = connection.cursor()
+		
+        print("Cleanin up!")
+        c.execute('BEGIN TRANSACTION')
+        # Firsly remove the null values
+        sql = "DELETE FROM parent_reply WHERE parent IS NULL"
+        c.execute(sql)
+        # After that we delete the values that are 'False' (idk how those got there)
+        sql = "DELETE FROM parent_reply WHERE parent == 'False'"
+        c.execute(sql)
+        connection.commit()
+        c.execute("VACUUM")
+        connection.commit()

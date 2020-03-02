@@ -33,7 +33,7 @@ from helpers import create_table_if_not_exists, get_db_path, get_dataset_path, g
 timeframes = []
 sql_transaction = []
 # start_row = 0
-start_row = 14900000  # that is where I stopped it last time
+start_row = 62100000  # that is where I stopped it last time
 cleanup = 1000000
 
 for f in os.listdir(data_path):
@@ -86,10 +86,10 @@ def transaction_bldr(sql):
         for s in sql_transaction:
             try:
                 c.execute(s)
-            # except Exception as e:
-            #     print(str(datetime.now()), 'transaction_bldr', s, e)
-            except:
-                pass
+            except Exception as e:
+                print(str(datetime.now()), s, e)
+            # except:
+            #     pass
         connection.commit()
         sql_transaction = []
 
@@ -97,14 +97,14 @@ def transaction_bldr(sql):
 def sql_insert_replace_comment(commentid, parentid, parent, comment, subreddit, time, score):
     try:
         sql = f"""UPDATE parent_reply
-        SET parent_id = "{parentid}",
-        comment_id = "{commentid}",
-        parent = "{parent}",
-        comment = "{comment}",
-        subreddit = "{subreddit}", 
-        unix = {int(time)},
-        score = {score} 
-        WHERE parent_id = "{parentid}";"""
+        SET parent_id = ?,
+        comment_id = ?,
+        parent = ?,
+        comment = ?,
+        subreddit = ?, 
+        unix = ?,
+        score = ? 
+        WHERE parent_id = ?;""".format(parentid, commentid, parent, comment, subreddit, int(time), score, parentid)
 
         transaction_bldr(sql)
     except Exception as e:
@@ -178,16 +178,16 @@ for timeframe in timeframes:
                     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,
                                                                                   str(datetime.now())))
 
-                if row_counter > start_row:
-                    if row_counter % cleanup == 0:
-                        print("Cleanin up!")
-                        # Firsly remove the null values
-                        sql = "DELETE FROM parent_reply WHERE parent IS NULL"
-                        c.execute(sql)
-                        connection.commit()
-                        # After that we delete the values that are 'False' (idk how those got there)
-                        sql = "DELETE FROM parent_reply WHERE parent == 'False'"
-                        c.execute(sql)
-                        connection.commit()
-                        c.execute("VACUUM")
-                        connection.commit()
+               # if row_counter > start_row:
+                   # if row_counter % cleanup == 0:
+print("Cleanin up!")
+c.execute('BEGIN TRANSACTION')
+# Firsly remove the null values
+sql = "DELETE FROM parent_reply WHERE parent IS NULL"
+c.execute(sql)
+# After that we delete the values that are 'False' (idk how those got there)
+sql = "DELETE FROM parent_reply WHERE parent == 'False'"
+c.execute(sql)
+connection.commit()
+c.execute("VACUUM")
+connection.commit()
