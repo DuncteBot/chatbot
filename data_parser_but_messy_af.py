@@ -202,11 +202,17 @@ for timeframe in timeframes:
                     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,
                                                                                   str(datetime.now())))
 
-                if row_counter > start_row:
-                    if row_counter % cleanup == 0:
-                        print("Cleanin up!")
-                        sql = "DELETE FROM parent_reply WHERE parent IS NULL"
-                        c.execute(sql)
-                        connection.commit()
-                        c.execute("VACUUM")
-                        connection.commit()
+                    # if row_counter > start_row:
+                    # if row_counter % cleanup == 0:
+                    # print("Cleanin up!")
+                    # c.execute('BEGIN TRANSACTION')
+                    # Firsly remove the null values
+                    # sql = "DELETE FROM parent_reply WHERE parent IS NULL"
+                    # c.execute(sql)
+                    # After that we delete the values that are 'False' (idk how those got there)
+                    # sql = "DELETE FROM parent_reply WHERE parent == 'False'"
+                    # c.execute(sql)
+                    # connection.commit()
+                    # c.execute("VACUUM")
+                    # connection.commit()
+print('Done')

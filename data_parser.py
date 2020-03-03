@@ -21,28 +21,18 @@
 #  SOFTWARE.
 #
 
-import os
 import sqlite3
 import json
 from datetime import datetime
 
-from config import filename_regex, data_path
-from helpers import create_table_if_not_exists, get_db_path, get_dataset_path, get_timeframe_path, format_data, \
-    acceptable
+from helpers import create_table_if_not_exists, get_db_path, get_timeframe_path, format_data, \
+    acceptable, get_timeframes
 
-timeframes = []
+timeframes = get_timeframes()
 sql_transaction = []
 # start_row = 0
-start_row = 62100000  # that is where I stopped it last time
+start_row = 137500000  # that is where I stopped it last time
 cleanup = 1000000
-
-for f in os.listdir(data_path):
-    if os.path.isfile(get_dataset_path(f)):
-        print(f)
-        match = filename_regex.match(f)
-        if match is not None:
-            timeframe = match.group(1)
-            timeframes.append(timeframe)
 
 print(timeframes)
 
@@ -78,25 +68,28 @@ def find_existing_score(pid):
         return False
 
 
-def transaction_bldr(sql):
+def transaction_bldr(sql, bindings = None):
     global sql_transaction
-    sql_transaction.append(sql)
+    sql_transaction.append([sql, bindings])
     if len(sql_transaction) > 2000:
         c.execute('BEGIN TRANSACTION')
-        for s in sql_transaction:
+        for s, b in sql_transaction:
             try:
-                c.execute(s)
-            except Exception as e:
-                print(str(datetime.now()), s, e)
-            # except:
-            #     pass
+                if b is not None:
+                    c.execute(s, b)
+                else:
+                    c.execute(s)
+            # except Exception as e:
+            #     print(str(datetime.now()), s, e)
+            except:
+                pass
         connection.commit()
         sql_transaction = []
 
 
 def sql_insert_replace_comment(commentid, parentid, parent, comment, subreddit, time, score):
     try:
-        sql = f"""UPDATE parent_reply
+        sql = """UPDATE parent_reply
         SET parent_id = ?,
         comment_id = ?,
         parent = ?,
@@ -104,9 +97,11 @@ def sql_insert_replace_comment(commentid, parentid, parent, comment, subreddit, 
         subreddit = ?, 
         unix = ?,
         score = ? 
-        WHERE parent_id = ?;""".format(parentid, commentid, parent, comment, subreddit, int(time), score, parentid)
+        WHERE parent_id = ?;"""
+        
+        b = [parentid, commentid, parent, comment, subreddit, int(time), score, parentid]
 
-        transaction_bldr(sql)
+        transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_replace_comment', e)
 
@@ -114,9 +109,12 @@ def sql_insert_replace_comment(commentid, parentid, parent, comment, subreddit, 
 def sql_insert_has_parent(commentid, parentid, parent, comment, subreddit, time, score):
     try:
         sql = """INSERT INTO parent_reply (parent_id, comment_id, parent, comment, subreddit, unix, score)
-        VALUES ("{}","{}","{}","{}","{}",{},{});
-        """.format(parentid, commentid, parent, comment, subreddit, int(time), score)
-        transaction_bldr(sql)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+        """
+        
+        b = [parentid, commentid, parent, comment, subreddit, int(time), score]
+        
+        transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_has_parent', e)
 
@@ -124,8 +122,11 @@ def sql_insert_has_parent(commentid, parentid, parent, comment, subreddit, time,
 def sql_insert_no_parent(commentid, parentid, comment, subreddit, time, score):
     try:
         sql = """INSERT INTO parent_reply (parent_id, comment_id, comment, subreddit, unix, score)
-        VALUES ("{}","{}","{}","{}",{},{});""".format(parentid, commentid, comment, subreddit, int(time), score)
-        transaction_bldr(sql)
+        VALUES (?, ?, ?, ?, ?, ?);"""
+        
+        b = [parentid, commentid, comment, subreddit, int(time), score]
+        
+        transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_no_parent', e)
 
@@ -138,7 +139,8 @@ for timeframe in timeframes:
         row_counter = 0
         paired_rows = 0
 
-        with open(get_timeframe_path(timeframe), buffering=1000) as f:
+        # with open(get_timeframe_path(timeframe), buffering=1000) as f:
+        with open(get_timeframe_path(timeframe)) as f:
             for row in f:
                 row_counter += 1
 
@@ -178,16 +180,4 @@ for timeframe in timeframes:
                     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,
                                                                                   str(datetime.now())))
 
-               # if row_counter > start_row:
-                   # if row_counter % cleanup == 0:
-print("Cleanin up!")
-c.execute('BEGIN TRANSACTION')
-# Firsly remove the null values
-sql = "DELETE FROM parent_reply WHERE parent IS NULL"
-c.execute(sql)
-# After that we delete the values that are 'False' (idk how those got there)
-sql = "DELETE FROM parent_reply WHERE parent == 'False'"
-c.execute(sql)
-connection.commit()
-c.execute("VACUUM")
-connection.commit()
+print('Done')

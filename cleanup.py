@@ -21,21 +21,12 @@
 #  SOFTWARE.
 #
 
-import os
 import sqlite3
 
 from config import filename_regex, data_path
-from helpers import get_db_path, get_dataset_path
+from helpers import get_db_path, get_dataset_path, get_timeframes
 
-timeframes = []
-
-for f in os.listdir(data_path):
-    if os.path.isfile(get_dataset_path(f)):
-        print(f)
-        match = filename_regex.match(f)
-        if match is not None:
-            timeframe = match.group(1)
-            timeframes.append(timeframe)
+timeframes = get_timeframes()
 
 print(timeframes)
 

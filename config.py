@@ -24,6 +24,7 @@
 import re
 
 data_path = '_data'
-# database_path = '_dbs'
-database_path = 'c:/ai_tmp/_dbs'
+model_path = '../chatbot-model'
+database_path = '_dbs'
+# database_path = 'c:/ai_tmp/_dbs'
 filename_regex = re.compile('^RC_((?:[0-9]{4})-(?:[0-9]{2}))$')

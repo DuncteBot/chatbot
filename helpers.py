@@ -23,7 +23,7 @@
 
 import os
 
-from config import database_path, data_path
+from config import database_path, data_path, filename_regex
 
 
 def get_dataset_path(timeframe):
@@ -37,6 +37,19 @@ def get_timeframe_path(timeframe):
 def get_db_path(timeframe):
     return os.path.join(database_path, f"{timeframe}.db")
     # return f"{database_path}/{timeframe}.db"
+
+def get_timeframes():
+    timeframes = []
+    
+    for f in os.listdir(data_path):
+        if os.path.isfile(get_dataset_path(f)):
+            print(f)
+            match = filename_regex.match(f)
+            if match is not None:
+                timeframe = match.group(1)
+                timeframes.append(timeframe)
+            
+    return timeframes
 
 
 def create_table_if_not_exists(cursor):
