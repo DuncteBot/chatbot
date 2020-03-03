@@ -23,7 +23,7 @@
 
 import sqlite3
 import pandas as pd
-from helpers import get_db_path
+from helpers import get_db_path, get_test_path, get_train_path
 
 # array has to be static and cannot be loaded with get_timeframes
 # because the large files will be deleted from the disk
@@ -52,22 +52,22 @@ for timeframe in timeframes:
         cur_length = len(df)
 
         if not test_done:
-            with open('test.from', 'a', encoding='utf8') as f:
+            with open(get_test_path('from'), 'a', encoding='utf8') as f:
                 for content in df['parent'].values:
                     f.write(content + '\n')
 
-            with open('test.to', 'a', encoding='utf8') as f:
+            with open(get_test_path('to'), 'a', encoding='utf8') as f:
                 for content in df['comment'].values:
                     f.write(str(content) + '\n')
 
             test_done = True
 
         else:
-            with open('train.from', 'a', encoding='utf8') as f:
+            with open(get_train_path('from'), 'a', encoding='utf8') as f:
                 for content in df['parent'].values:
                     f.write(content + '\n')
 
-            with open('train.to', 'a', encoding='utf8') as f:
+            with open(get_train_path('to'), 'a', encoding='utf8') as f:
                 for content in df['comment'].values:
                     f.write(str(content) + '\n')
 

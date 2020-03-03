@@ -23,7 +23,7 @@
 
 import os
 
-from config import database_path, data_path, filename_regex
+from config import database_path, data_path, filename_regex, prepare_path
 
 
 def get_dataset_path(timeframe):
@@ -80,3 +80,12 @@ def acceptable(data):
         return False
     else:
         return True
+
+
+def get_test_path(variant):
+    return os.path.join(prepare_path, f"test.{variant}")
+
+
+def get_train_path(variant):
+    return os.path.join(prepare_path, f"train.{variant}")
+
