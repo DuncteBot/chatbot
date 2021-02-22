@@ -36,7 +36,7 @@ def get_timeframe_path(timeframe):
 
 def get_db_path(timeframe):
     return os.path.join(database_path, f"{timeframe}.db")
-    # return f"{database_path}/{timeframe}.db"
+
 
 def get_timeframes():
     timeframes = []
