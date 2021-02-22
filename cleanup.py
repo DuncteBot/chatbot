@@ -33,7 +33,7 @@ print(timeframes)
 for timeframe in timeframes:
     with sqlite3.connect(get_db_path(timeframe)) as connection:
         c = connection.cursor()
-		
+
         print("Cleanin up!")
         c.execute('BEGIN TRANSACTION')
         # Firsly remove the null values
