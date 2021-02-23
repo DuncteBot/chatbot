@@ -23,6 +23,7 @@
 
 import sqlite3
 import pandas as pd
+import os
 from helpers import get_db_path, get_test_path, get_train_path
 
 # array has to be static and cannot be loaded with get_timeframes
@@ -31,18 +32,43 @@ timeframes = [
     '2019-09'
 ]
 
+
+def find_start_unix():
+    if not os.path.exists(get_test_path('from')):
+        return 0
+
+    with open(get_train_path('from'), 'r', encoding='utf8') as fromTrainFile:
+        fileLines = fromTrainFile.readlines()
+        commentText = fileLines[-1].strip()
+
+        print("Fetching unix for", commentText)
+
+        # from === parent
+        fetchConnection = sqlite3.connect(get_db_path(timeframes[0]))
+        cursor = fetchConnection.cursor()
+        cursor.execute(
+            "SELECT unix FROM parent_reply WHERE parent = ?",
+            (commentText,)
+        )
+        row = cursor.fetchone()
+        print("Unix found", row[0])
+
+        return row[0]
+
+
+# TODO: HAVE A GOOD LOOK AT THIS SCRIPT IN THE MORNING
 for timeframe in timeframes:
     connection = sqlite3.connect(get_db_path(timeframe))
     c = connection.cursor()
     limit = 5000
-    last_unix = 0
+    last_unix = find_start_unix()
     cur_length = limit
     counter = 0
-    test_done = False
+    test_done = last_unix > 0  # if we have a unix it means that we already have a test
 
     while cur_length == limit:
         df = pd.read_sql(
-            """SELECT * FROM parent_reply 
+            """SELECT * FROM parent_reply
                 WHERE unix > {}
                 and parent NOT NULL
                 and score > 0

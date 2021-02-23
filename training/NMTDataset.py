@@ -3,18 +3,13 @@ from abc import ABC
 import tensorflow as tf
 import tensorflow_addons as tfa
 
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 from sklearn.model_selection import train_test_split
 
 import unicodedata
 import re
-import numpy as np
-import os
 import io
-import time
 
-from training.train import max_length_output, max_length_input
+from training.test_train import max_length_output, max_length_input
 
 
 class NMTDataset:
@@ -184,6 +179,7 @@ class Decoder(tf.keras.Model, ABC):
     def build_initial_state(self, batch_sz, encoder_state, Dtype):
         decoder_initial_state = self.rnn_cell.get_initial_state(batch_size=batch_sz, dtype=Dtype)
         decoder_initial_state = decoder_initial_state.clone(cell_state=encoder_state)
+
         return decoder_initial_state
 
     def call(self, inputs, initial_state):
