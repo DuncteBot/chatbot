@@ -72,5 +72,5 @@ for timeframe in timeframes:
                     f.write(str(content) + '\n')
 
         counter += 1
-        if counter % 20 == 0:
+        if counter % 10 == 0:
             print(counter * limit, 'rows completed so far')

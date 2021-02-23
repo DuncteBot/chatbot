@@ -1,25 +1,4 @@
-#  MIT License
-#
-#  Copyright (c) 2020 Duncan Sterken
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in all
-#  copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#  SOFTWARE.
-#
+from abc import ABC
 
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -44,8 +23,7 @@ class NMTDataset:
         self.inp_tokenizer = None
         self.targ_tokenizer = None
 
-
-    def unicode_to_ascii(self, s):
+    def unicode_to_ascii(s):
         return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
 
     ## Step 1 and Step 2
@@ -61,6 +39,9 @@ class NMTDataset:
         # replacing everything with space except (a-z, A-Z, ".", "?", "!", ",")
         w = re.sub(r"[^a-zA-Z?.!,¿]+", " ", w)
 
+        # re-introduce newlines
+        w = re.sub("newlinechar", "\n", w)
+
         w = w.strip()
 
         # adding a start and an end token to the sentence
@@ -69,7 +50,8 @@ class NMTDataset:
         return w
 
     def create_dataset(self, from_file, to_file, num_examples):
-        # path : path to spa-eng.txt file
+        # from_file : path to train.from
+        # to_file : path to train.to
         # num_examples : Limit the total number of training example for faster training (set num_examples = len(lines) to use full data)
         from_lines = io.open(from_file, encoding='UTF-8').read().strip().split('\n')
         from_lines = [self.preprocess_sentence(line) for line in from_lines[:num_examples]]
@@ -80,16 +62,16 @@ class NMTDataset:
         return zip(from_lines, to_lines)
 
     # Step 3 and Step 4
-    def tokenize(self, lang):
-        # lang = list of sentences in a language
+    def tokenize(self, sentences):
+        # sentences = list of sentences for this dataset
 
         # print(len(lang), "example sentence: {}".format(lang[0]))
         lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(filters='', oov_token='<OOV>')
-        lang_tokenizer.fit_on_texts(lang)
+        lang_tokenizer.fit_on_texts(sentences)
 
         ## tf.keras.preprocessing.text.Tokenizer.texts_to_sequences converts string (w1, w2, w3, ......, wn)
         ## to a list of correspoding integer ids of words (id_w1, id_w2, id_w3, ...., id_wn)
-        tensor = lang_tokenizer.texts_to_sequences(lang)
+        tensor = lang_tokenizer.texts_to_sequences(sentences)
 
         ## tf.keras.preprocessing.sequence.pad_sequences takes argument a list of integer id sequences
         ## and pads the sequences to match the longest sequences in the given input
@@ -99,14 +81,14 @@ class NMTDataset:
 
     def load_dataset(self, from_file, to_file, num_examples=None):
         # creating cleaned input, output pairs
-        input, target = self.create_dataset(from_file, to_file, num_examples)
+        input_dataset, target_dataset = self.create_dataset(from_file, to_file, num_examples)
 
-        input_tensor, inp_tokenizer = self.tokenize(input)
-        target_tensor, targ_tokenizer = self.tokenize(target)
+        input_tensor, inp_tokenizer = self.tokenize(input_dataset)
+        target_tensor, targ_tokenizer = self.tokenize(target_dataset)
 
         return input_tensor, target_tensor, inp_tokenizer, targ_tokenizer
 
-    def call(self, num_examples, BUFFER_SIZE, BATCH_SIZE):
+    def call(self, num_examples, buffer_size, batch_size):
         input_tensor, target_tensor, self.inp_tokenizer, self.targ_tokenizer = self.load_dataset(
             self.file_func('from'),
             self.file_func('to'),
@@ -118,17 +100,17 @@ class NMTDataset:
                                                                                                         test_size=0.2)
 
         train_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train))
-        train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
+        train_dataset = train_dataset.shuffle(buffer_size).batch(batch_size, drop_remainder=True)
 
         val_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_val, target_tensor_val))
-        val_dataset = val_dataset.batch(BATCH_SIZE, drop_remainder=True)
+        val_dataset = val_dataset.batch(batch_size, drop_remainder=True)
 
         return train_dataset, val_dataset, self.inp_tokenizer, self.targ_tokenizer
 
 #####
 
 
-class Encoder(tf.keras.Model):
+class Encoder(tf.keras.Model, ABC):
     def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz):
         super(Encoder, self).__init__()
         self.batch_sz = batch_sz
@@ -150,7 +132,7 @@ class Encoder(tf.keras.Model):
         return [tf.zeros((self.batch_sz, self.enc_units)), tf.zeros((self.batch_sz, self.enc_units))]
 
 
-class Decoder(tf.keras.Model):
+class Decoder(tf.keras.Model, ABC):
     def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz, attention_type='luong'):
         super(Decoder, self).__init__()
         self.batch_sz = batch_sz
@@ -192,7 +174,7 @@ class Decoder(tf.keras.Model):
         # memory: encoder hidden states of shape (batch_size, max_length_input, enc_units)
         # memory_sequence_length: 1d array of shape (batch_size) with every element set to max_length_input (for masking purpose)
 
-        if (attention_type == 'bahdanau'):
+        if attention_type == 'bahdanau':
             return tfa.seq2seq.BahdanauAttention(units=dec_units, memory=memory,
                                                  memory_sequence_length=memory_sequence_length)
         else:
