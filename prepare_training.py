@@ -47,7 +47,8 @@ def find_start_unix():
         fetchConnection = sqlite3.connect(get_db_path(timeframes[0]))
         cursor = fetchConnection.cursor()
         cursor.execute(
-            "SELECT unix FROM parent_reply WHERE parent = ?",
+            # the limit is extra important here because our database is huge as fuck
+            "SELECT unix FROM parent_reply WHERE parent = ? LIMIT 1",
             (commentText,)
         )
         row = cursor.fetchone()
