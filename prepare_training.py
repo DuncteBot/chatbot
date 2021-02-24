@@ -57,7 +57,6 @@ def find_start_unix():
         return row[0]
 
 
-# TODO: HAVE A GOOD LOOK AT THIS SCRIPT IN THE MORNING
 for timeframe in timeframes:
     connection = sqlite3.connect(get_db_path(timeframe))
     c = connection.cursor()
