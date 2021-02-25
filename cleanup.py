@@ -20,5 +20,9 @@ for timeframe in timeframes:
         sql = "DELETE FROM parent_reply WHERE parent == 'False'"
         c.execute(sql)
         connection.commit()
+        # And lets also remove all the parents that are '0'
+        sql = "DELETE FROM parent_reply WHERE parent == '0'"
+        c.execute(sql)
+        connection.commit()
         c.execute("VACUUM")
         connection.commit()

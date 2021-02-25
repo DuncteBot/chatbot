@@ -33,7 +33,17 @@ timeframes = [
 ]
 
 
-def find_start_unix():
+def select_total_rows(dbConnection):
+    cursor = dbConnection.cursor()
+    cursor.execute(
+        "SELECT count(unix) FROM parent_reply"
+    )
+    row = cursor.fetchone()
+
+    return row[0]
+
+
+def find_start_unix(dbConnection):
     if not os.path.exists(get_test_path('from')):
         return 0
 
@@ -44,8 +54,7 @@ def find_start_unix():
         print("Fetching unix for", commentText)
 
         # from === parent
-        fetchConnection = sqlite3.connect(get_db_path(timeframes[0]))
-        cursor = fetchConnection.cursor()
+        cursor = dbConnection.cursor()
         cursor.execute(
             # the limit is extra important here because our database is huge as fuck
             "SELECT unix FROM parent_reply WHERE parent = ? LIMIT 1",
@@ -58,45 +67,51 @@ def find_start_unix():
 
 
 for timeframe in timeframes:
-    connection = sqlite3.connect(get_db_path(timeframe))
-    c = connection.cursor()
-    limit = 5000
-    last_unix = find_start_unix()
-    cur_length = limit
-    counter = 0
-    test_done = last_unix > 0  # if we have a unix it means that we already have a test
+    print('Timeframe', timeframe)
 
-    while cur_length == limit:
-        df = pd.read_sql(
-            """SELECT * FROM parent_reply
-                WHERE unix > {}
-                and parent NOT NULL
-                and score > 0
-                ORDER BY unix ASC LIMIT {}""".format(last_unix, limit),
-            connection)
-        last_unix = df.tail(1)['unix'].values[0]
-        cur_length = len(df)
+    with sqlite3.connect(get_db_path(timeframe)) as connection:
+        total_rows = select_total_rows(connection)
 
-        if not test_done:
-            with open(get_test_path('from'), 'a', encoding='utf8') as f:
-                for content in df['parent'].values:
-                    f.write(content + '\n')
+        print('Total rows: ', total_rows)
 
-            with open(get_test_path('to'), 'a', encoding='utf8') as f:
-                for content in df['comment'].values:
-                    f.write(str(content) + '\n')
+        # limit = 5000
+        limit = 100000
+        last_unix = find_start_unix(connection)
+        cur_length = limit
+        counter = 0
+        test_done = last_unix > 0  # if we have a unix it means that we already have a test
 
-            test_done = True
+        while cur_length == limit:
+            df = pd.read_sql(
+                """SELECT * FROM parent_reply
+                    WHERE unix > {}
+                    and parent NOT NULL
+                    and score > 0
+                    ORDER BY unix ASC LIMIT {}""".format(last_unix, limit),
+                connection)
+            last_unix = df.tail(1)['unix'].values[0]
+            cur_length = len(df)
 
-        else:
-            with open(get_train_path('from'), 'a', encoding='utf8') as f:
-                for content in df['parent'].values:
-                    f.write(content + '\n')
+            if not test_done:
+                with open(get_test_path('from'), 'a', encoding='utf8') as f:
+                    for content in df['parent'].values:
+                        f.write(content + '\n')
 
-            with open(get_train_path('to'), 'a', encoding='utf8') as f:
-                for content in df['comment'].values:
-                    f.write(str(content) + '\n')
+                with open(get_test_path('to'), 'a', encoding='utf8') as f:
+                    for content in df['comment'].values:
+                        f.write(str(content) + '\n')
 
-        counter += 1
-        if counter % 10 == 0:
-            print(counter * limit, 'rows completed so far')
+                test_done = True
+
+            else:
+                with open(get_train_path('from'), 'a', encoding='utf8') as f:
+                    for content in df['parent'].values:
+                        f.write(content + '\n')
+
+                with open(get_train_path('to'), 'a', encoding='utf8') as f:
+                    for content in df['comment'].values:
+                        f.write(str(content) + '\n')
+
+            counter += 1
+            if counter % 10 == 0:
+                print(counter * limit, '/', total_rows, 'rows completed so far')

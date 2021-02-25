@@ -7,8 +7,8 @@ from helpers import create_table_if_not_exists, get_db_path, get_timeframe_path,
 
 timeframes = get_timeframes()
 sql_transaction = []
-# start_row = 0
-start_row = 137500000  # that is where I stopped it last time
+start_row = 0
+# start_row = 137500000  # that is where I stopped it last time
 cleanup = 1000000
 
 print(timeframes)
