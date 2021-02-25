@@ -1,6 +1,7 @@
 import sqlite3
 import json
 from datetime import datetime
+from traceback import print_tb
 
 from helpers import create_table_if_not_exists, get_db_path, get_timeframe_path, format_data, \
     acceptable, get_timeframes
@@ -27,6 +28,7 @@ def find_parent(pid):
             return False
     except Exception as e:
         print('find_parent', e)
+        print_tb(e)
         return False
 
 
@@ -44,6 +46,7 @@ def find_existing_score(pid):
             return False
     except Exception as e:
         print('find_existing_score', e)
+        print_tb(e)
         return False
 
 
@@ -83,6 +86,7 @@ def sql_insert_replace_comment(commentid, parentid, parent, comment, subreddit, 
         transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_replace_comment', e)
+        print_tb(e)
 
 
 def sql_insert_has_parent(commentid, parentid, parent, comment, subreddit, time, score):
@@ -96,6 +100,7 @@ def sql_insert_has_parent(commentid, parentid, parent, comment, subreddit, time,
         transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_has_parent', e)
+        print_tb(e)
 
 
 def sql_insert_no_parent(commentid, parentid, comment, subreddit, time, score):
@@ -108,6 +113,7 @@ def sql_insert_no_parent(commentid, parentid, comment, subreddit, time, score):
         transaction_bldr(sql, b)
     except Exception as e:
         print('sql_insert_no_parent', e)
+        print_tb(e)
 
 
 for timeframe in timeframes:
