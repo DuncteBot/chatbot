@@ -9,7 +9,6 @@ timeframes = get_timeframes()
 sql_transaction = []
 start_row = 0
 # start_row = 137500000  # that is where I stopped it last time
-cleanup = 1000000
 
 print(timeframes)
 
@@ -32,6 +31,9 @@ def find_parent(pid):
 
 
 def find_existing_score(pid):
+    if pid is False:
+        return False
+
     try:
         sql = "SELECT score FROM parent_reply WHERE parent_id = '{}' LIMIT 1".format(pid)
         c.execute(sql)
@@ -116,8 +118,8 @@ for timeframe in timeframes:
         row_counter = 0
         paired_rows = 0
 
-        # with open(get_timeframe_path(timeframe), buffering=1000) as f:
-        with open(get_timeframe_path(timeframe)) as f:
+        with open(get_timeframe_path(timeframe), buffering=1000) as f:
+            # with open(get_timeframe_path(timeframe)) as f:
             for row in f:
                 row_counter += 1
 
@@ -156,5 +158,8 @@ for timeframe in timeframes:
                 if row_counter % 100000 == 0:
                     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,
                                                                                   str(datetime.now())))
+
+    # start from 0
+    start_row = 0
 
 print('Done')
