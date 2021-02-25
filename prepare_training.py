@@ -75,7 +75,7 @@ for timeframe in timeframes:
         print('Total rows: ', total_rows)
 
         # limit = 5000
-        limit = 100000
+        limit = 1000000
         last_unix = find_start_unix(connection)
         cur_length = limit
         counter = 0
@@ -94,11 +94,20 @@ for timeframe in timeframes:
 
             if not test_done:
                 with open(get_test_path('from'), 'a', encoding='utf8') as f:
-                    for content in df['parent'].values:
+                    for content in df['parent'].values[:5000]:
                         f.write(content + '\n')
 
                 with open(get_test_path('to'), 'a', encoding='utf8') as f:
-                    for content in df['comment'].values:
+                    for content in df['comment'].values[:5000]:
+                        f.write(str(content) + '\n')
+
+                # append the rest to the train files
+                with open(get_train_path('from'), 'a', encoding='utf8') as f:
+                    for content in df['parent'].values[5001:]:
+                        f.write(content + '\n')
+
+                with open(get_train_path('to'), 'a', encoding='utf8') as f:
+                    for content in df['comment'].values[5001:]:
                         f.write(str(content) + '\n')
 
                 test_done = True

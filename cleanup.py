@@ -13,15 +13,8 @@ for timeframe in timeframes:
 
         print("Cleanin up!")
         c.execute('BEGIN TRANSACTION')
-        # Firsly remove the null values
-        sql = "DELETE FROM parent_reply WHERE parent IS NULL"
-        c.execute(sql)
-        # After that we delete the values that are 'False' (idk how those got there)
-        sql = "DELETE FROM parent_reply WHERE parent == 'False'"
-        c.execute(sql)
-        connection.commit()
-        # And lets also remove all the parents that are '0'
-        sql = "DELETE FROM parent_reply WHERE parent == '0'"
+        # Remove values that we don't want
+        sql = "DELETE FROM parent_reply WHERE parent IS NULL OR parent == 'False' OR parent == '0'"
         c.execute(sql)
         connection.commit()
         c.execute("VACUUM")
