@@ -9,7 +9,7 @@ from helpers import create_table_if_not_exists, get_db_path, get_timeframe_path,
 timeframes = get_timeframes()
 sql_transaction = []
 start_row = 0
-# start_row = 137500000  # that is where I stopped it last time
+# start_row = 87800000  # that is where I stopped it last time
 
 print(timeframes)
 
@@ -124,12 +124,12 @@ for timeframe in timeframes:
         row_counter = 0
         paired_rows = 0
 
-        with open(get_timeframe_path(timeframe), buffering=1000) as f:
-            # with open(get_timeframe_path(timeframe)) as f:
+        # with open(get_timeframe_path(timeframe), buffering=1000) as f:
+        with open(get_timeframe_path(timeframe)) as f:
             for row in f:
                 row_counter += 1
 
-                if row_counter > start_row:
+                if row_counter >= start_row:
                     try:
                         row = json.loads(row)
                         parent_id = row['parent_id'].split('_')[1]
