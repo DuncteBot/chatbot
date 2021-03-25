@@ -1,4 +1,4 @@
-absl-py==0.11.0
+absl-py==0.12.0
 astor==0.8.1
 astunparse==1.6.3
 cachetools==4.0.0
@@ -7,7 +7,7 @@ chardet==3.0.4
 cycler==0.10.0
 flatbuffers==1.12
 gast==0.3.3
-google-auth==1.11.2
+google-auth==1.28.0
 google-auth-oauthlib==0.4.1
 google-pasta==0.2.0
 grpcio==1.32.0
@@ -40,7 +40,7 @@ sklearn==0.0
 tensorboard==2.4.1
 tensorboard-plugin-wit==1.8.0
 tensorflow==2.4.1
-tensorflow-addons==0.11.2
+tensorflow-addons==0.12.1
 tensorflow-estimator==2.4.0
 termcolor==1.1.0
 threadpoolctl==2.1.0
