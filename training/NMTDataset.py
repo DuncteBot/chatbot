@@ -9,7 +9,7 @@ import unicodedata
 import re
 import io
 
-from training.test_train import max_length_output, max_length_input
+from training.train_config import max_length_output, max_length_input
 
 
 class NMTDataset:

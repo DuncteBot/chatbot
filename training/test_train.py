@@ -4,10 +4,17 @@ import time
 import tensorflow_addons as tfa
 
 from config import checkpoint_dir
-from training.NMTDataset import Encoder, Decoder
-from training.model import train_dataset, inp_data, targ_data, num_examples, BATCH_SIZE, dataset_creator
+from helpers import get_train_path, get_test_path
+import training.train_config
+from training.NMTDataset import Encoder, Decoder, NMTDataset
+from training.train_config import TRAIN_EPOCHS, USE_TEST_PATH, num_examples, BUFFER_SIZE, BATCH_SIZE
 
-TRAIN_EPOCHS = 10
+if USE_TEST_PATH:
+    dataset_creator = NMTDataset(get_test_path)
+else:
+    dataset_creator = NMTDataset(get_train_path)
+
+train_dataset, val_dataset, inp_data, targ_data = dataset_creator.call(num_examples, BUFFER_SIZE, BATCH_SIZE)
 
 example_input_batch, example_target_batch = next(iter(train_dataset))
 
@@ -16,12 +23,21 @@ print(example_input_batch, example_target_batch)
 
 vocab_inp_size = len(inp_data.word_index) + 1
 vocab_tar_size = len(targ_data.word_index) + 1
+training.train_config.max_length_input = example_input_batch.shape[1]
+training.train_config.max_length_output = example_target_batch.shape[1]
+
+print(training.train_config.max_length_input)
+
 max_length_input = example_input_batch.shape[1]
 max_length_output = example_target_batch.shape[1]
 
 embedding_dim = 256
 units = 1024
 steps_per_epoch = num_examples // BATCH_SIZE
+
+print("max_length_spanish, max_length_english, vocab_size_spanish, vocab_size_english")
+print(max_length_input, max_length_output, vocab_inp_size, vocab_tar_size)
+
 
 print("max_length_spanish, max_length_english, vocab_size_spanish, vocab_size_english")
 print(max_length_input, max_length_output, vocab_inp_size, vocab_tar_size)
