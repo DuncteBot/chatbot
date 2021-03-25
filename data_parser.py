@@ -9,7 +9,7 @@ from helpers import create_table_if_not_exists, get_db_path, get_timeframe_path,
 timeframes = get_timeframes()
 sql_transaction = []
 start_row = 0
-# start_row = 87800000  # that is where I stopped it last time
+# start_row = 8400000  # that is where I stopped it last time
 
 print(timeframes)
 
@@ -21,9 +21,9 @@ def find_parent(pid):
         result = c.fetchone()
         if result is not None:
             res = result[0]
-            if res == 'False':
+            if res is None or res == 'False' or res == '0':
                 return False
-            return result[0]
+            return res
         else:
             return False
     except Exception as e:

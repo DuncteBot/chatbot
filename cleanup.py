@@ -18,8 +18,8 @@ for timeframe in timeframes:
             sql = "DELETE FROM parent_reply WHERE parent IS NULL OR parent == 'False' OR parent == '0'"
             c.execute(sql)
             connection.commit()
-            c.execute("VACUUM")
-            connection.commit()
+            # c.execute("VACUUM")
+            # connection.commit()
         except Exception as e:
             print('Something broke')
             print_tb(e)
