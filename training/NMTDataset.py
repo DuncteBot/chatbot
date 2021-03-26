@@ -18,7 +18,7 @@ class NMTDataset:
         self.inp_tokenizer = None
         self.targ_tokenizer = None
 
-    def unicode_to_ascii(s):
+    def unicode_to_ascii(self, s):
         return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
 
     ## Step 1 and Step 2
@@ -54,7 +54,7 @@ class NMTDataset:
         to_lines = io.open(to_file, encoding='UTF-8').read().strip().split('\n')
         to_lines = [self.preprocess_sentence(line) for line in to_lines[:num_examples]]
 
-        return zip(from_lines, to_lines)
+        return from_lines, to_lines
 
     # Step 3 and Step 4
     def tokenize(self, sentences):
